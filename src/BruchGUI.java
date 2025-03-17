@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class BruchGUI extends JFrame {
     private JTextField zaehler1Field, nenner1Field, zaehler2Field, nenner2Field;
@@ -8,45 +10,64 @@ public class BruchGUI extends JFrame {
 
     public BruchGUI() {
         setTitle("Bruchrechner");
-        setSize(400, 300);
+        setSize(450, 250);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
 
-        JPanel content = new JPanel(new GridLayout(6, 2));  // 6 Zeilen für die Labels und Eingabefelder
+        // Hauptpanel mit GridBagLayout für flexible Anordnung
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
 
-        // Labels und Eingabefelder
-        content.add(new JLabel("Zähler 1:"));
-        zaehler1Field = new JTextField();
-        content.add(zaehler1Field);
+        // Bruch 1
+        gbc.gridx = 0; gbc.gridy = 0;
+        zaehler1Field = new JTextField(5);
+        panel.add(zaehler1Field, gbc);
 
-        content.add(new JLabel("Nenner 1:"));
-        nenner1Field = new JTextField();
-        content.add(nenner1Field);
+        gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(new JSeparator(SwingConstants.HORIZONTAL), gbc);
 
-        content.add(new JLabel("Zähler 2:"));
-        zaehler2Field = new JTextField();
-        content.add(zaehler2Field);
+        gbc.gridx = 0; gbc.gridy = 2;
+        nenner1Field = new JTextField(5);
+        panel.add(nenner1Field, gbc);
 
-        content.add(new JLabel("Nenner 2:"));
-        nenner2Field = new JTextField();
-        content.add(nenner2Field);
-
-        // Dropdown für Operationen
-        content.add(new JLabel("Operation:"));
+        // Operator
+        gbc.gridx = 1; gbc.gridy = 1;
         String[] operations = {"+", "-", "*", "/"};
         operationBox = new JComboBox<>(operations);
-        content.add(operationBox);
+        panel.add(operationBox, gbc);
 
-        // Berechnen Button
+        // Bruch 2
+        gbc.gridx = 2; gbc.gridy = 0;
+        zaehler2Field = new JTextField(5);
+        panel.add(zaehler2Field, gbc);
+
+        gbc.gridx = 2; gbc.gridy = 1;
+        panel.add(new JSeparator(SwingConstants.HORIZONTAL), gbc);
+
+        gbc.gridx = 2; gbc.gridy = 2;
+        nenner2Field = new JTextField(5);
+        panel.add(nenner2Field, gbc);
+
+        // Berechnen-Button
+        gbc.gridx = 1; gbc.gridy = 3;
         JButton berechnenButton = new JButton("Berechnen");
-        berechnenButton.addActionListener(e -> berechnen()); // Direkt auf Methode verweisen
-        content.add(berechnenButton);
+        berechnenButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                berechnen();
+            }
+        });
+        panel.add(berechnenButton, gbc);
 
-        // Ergebnislabel
-        resultLabel = new JLabel();
-        content.add(resultLabel);
+        // Ergebnis-Anzeige
+        gbc.gridx = 1; gbc.gridy = 4;
+        resultLabel = new JLabel("Ergebnis: ");
+        panel.add(resultLabel, gbc);
 
-
-        setContentPane(content);
+        add(panel, BorderLayout.CENTER);
         setVisible(true);
     }
 
@@ -57,32 +78,27 @@ public class BruchGUI extends JFrame {
             int zaehler2 = Integer.parseInt(zaehler2Field.getText());
             int nenner2 = Integer.parseInt(nenner2Field.getText());
 
+            // Fehlerbehandlung: Nenner darf nicht 0 sein
+            if (nenner1 == 0 || nenner2 == 0) {
+                resultLabel.setText("Nenner darf nicht 0 sein!");
+                return; // Methode abbrechen, wenn ungültige Eingabe
+            }
+
             Bruch bruch1 = new Bruch(zaehler1, nenner1);
             Bruch bruch2 = new Bruch(zaehler2, nenner2);
             Bruch result;
 
             switch ((String) operationBox.getSelectedItem()) {
-                case "+":
-                    result = bruch1.add(bruch2);
-                    break;
-                case "-":
-                    result = bruch1.sub(bruch2);
-                    break;
-                case "*":
-                    result = bruch1.mul(bruch2);
-                    break;
-                case "/":
-                    result = bruch1.div(bruch2);
-                    break;
-                default:
-                    result = null;
+                case "+": result = bruch1.add(bruch2); break;
+                case "-": result = bruch1.sub(bruch2); break;
+                case "*": result = bruch1.mul(bruch2); break;
+                case "/": result = bruch1.div(bruch2); break;
+                default: result = null;
             }
 
-            resultLabel.setText("Ergebnis gekürzt: " + result);
+            resultLabel.setText("Ergebnis: " + result);
         } catch (NumberFormatException ex) {
-            resultLabel.setText("Bitte gültige Zahlen eingeben!");
-        } catch (IllegalArgumentException ex) {
-            resultLabel.setText(ex.getMessage());
+            resultLabel.setText("Fehler: Bitte nur ganze Zahlen eingeben!");
         }
     }
 
